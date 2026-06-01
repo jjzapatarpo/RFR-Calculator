@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
+ 
   :root {
     --green:       #002917;
     --green-mid:   #004d28;
@@ -32,7 +32,7 @@
     --radius:      8px;
     --radius-lg:   12px;
   }
-
+ 
   body {
     font-family: 'Manrope', sans-serif;
     font-size: 14px;
@@ -40,10 +40,10 @@
     background: #f3f4f6;
     min-height: 100vh;
   }
-
+ 
   /* ── Layout ── */
   .shell { display: flex; min-height: 100vh; }
-
+ 
   .sidebar {
     width: 260px;
     flex-shrink: 0;
@@ -53,7 +53,7 @@
     flex-direction: column;
     gap: 32px;
   }
-
+ 
   .logo { display: flex; align-items: center; gap: 10px; }
   .logo-mark {
     width: 36px; height: 36px;
@@ -66,13 +66,13 @@
   .logo-text { line-height: 1.2; }
   .logo-name { font-size: 15px; font-weight: 600; color: var(--mint); letter-spacing: -0.2px; }
   .logo-sub  { font-size: 10px; color: rgba(247,255,247,0.55); letter-spacing: 0.04em; text-transform: uppercase; }
-
+ 
   .sidebar-section { }
   .sidebar-label {
     font-size: 10px; font-weight: 600; color: rgba(247,255,247,0.4);
     text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
   }
-
+ 
   .rate-tabs { display: flex; flex-direction: column; gap: 4px; }
   .rate-tab {
     display: flex; align-items: center; gap: 10px;
@@ -88,10 +88,11 @@
     background: rgba(247,255,247,0.3); flex-shrink: 0;
   }
   .rate-tab.active .tab-dot { background: var(--cyan); }
-
+ 
   .api-section { margin-top: auto; padding-top: 24px; border-top: 1px solid rgba(247,255,247,0.1); }
   .api-label { font-size: 10px; font-weight: 600; color: rgba(247,255,247,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
-  .api-input-row { display: flex; gap: 6px; }
+  .api-input-row { display: flex; flex-direction: column; gap: 6px; }
+  .api-btn-row { display: flex; gap: 6px; }
   .api-input {
     flex: 1; height: 32px; padding: 0 10px; border-radius: var(--radius);
     border: 1px solid rgba(247,255,247,0.15); background: rgba(247,255,247,0.07);
@@ -109,14 +110,14 @@
   .api-status { margin-top: 6px; font-size: 11px; min-height: 16px; }
   .api-status.ok  { color: #6ee7b7; }
   .api-status.err { color: #fca5a5; }
-
+ 
   /* ── Main ── */
   .main { flex: 1; padding: 32px; overflow-y: auto; }
-
+ 
   .page-header { margin-bottom: 28px; }
   .page-title { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
   .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
-
+ 
   /* ── Cards ── */
   .card {
     background: var(--white); border: 1px solid var(--border);
@@ -126,11 +127,11 @@
     font-size: 11px; font-weight: 600; color: var(--text-muted);
     text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px;
   }
-
+ 
   /* ── Form ── */
   .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
   .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-
+ 
   .field { display: flex; flex-direction: column; gap: 5px; }
   .field label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
   .field input, .field select {
@@ -140,7 +141,7 @@
     background: var(--white); transition: border-color 0.15s;
   }
   .field input:focus, .field select:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(7,160,195,0.1); }
-
+ 
   /* ── Toggle ── */
   .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
   .toggle { position: relative; display: inline-block; width: 38px; height: 22px; }
@@ -156,7 +157,7 @@
   input:checked + .toggle-slider { background: var(--green); }
   input:checked + .toggle-slider:before { transform: translateX(16px); }
   .toggle-label { font-size: 13px; color: var(--text); font-weight: 500; }
-
+ 
   /* ── Subperiods ── */
   .subperiod-row {
     display: grid; grid-template-columns: 160px 1fr 1fr 1fr 32px;
@@ -172,7 +173,7 @@
     font-size: 16px; transition: all 0.15s;
   }
   .remove-btn:hover { background: var(--danger-bg); color: var(--danger); border-color: #fca5a5; }
-
+ 
   .add-sp-btn {
     display: inline-flex; align-items: center; gap: 6px;
     height: 32px; padding: 0 12px; border-radius: var(--radius);
@@ -181,7 +182,7 @@
     cursor: pointer; transition: all 0.15s; margin-top: 4px;
   }
   .add-sp-btn:hover { border-color: var(--cyan); color: var(--cyan); }
-
+ 
   /* ── Buttons ── */
   .btn-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
   .btn-calc {
@@ -193,7 +194,7 @@
   }
   .btn-calc:hover { background: var(--green-mid); }
   .btn-calc:disabled { opacity: 0.5; cursor: not-allowed; }
-
+ 
   .btn-secondary {
     height: 36px; padding: 0 16px; border-radius: var(--radius);
     background: white; color: var(--text); border: 1px solid var(--border);
@@ -202,9 +203,9 @@
     transition: all 0.15s;
   }
   .btn-secondary:hover { background: var(--surface); border-color: #d1d5db; }
-
+ 
   .calc-status { font-size: 12px; color: var(--text-muted); }
-
+ 
   /* ── Spinner ── */
   .spinner {
     display: inline-block; width: 15px; height: 15px;
@@ -212,7 +213,7 @@
     border-radius: 50%; animation: spin 0.6s linear infinite;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
-
+ 
   /* ── Error ── */
   .error-box {
     background: var(--danger-bg); border: 1px solid #fca5a5;
@@ -220,10 +221,10 @@
     font-size: 13px; color: var(--danger); margin-top: 12px;
     display: none;
   }
-
+ 
   /* ── Results ── */
   .results { margin-top: 20px; }
-
+ 
   .estimate-banner {
     background: var(--warn-bg); border: 1px solid var(--warn-border);
     border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px;
@@ -232,7 +233,7 @@
   .estimate-icon { font-size: 18px; color: var(--warn-border); flex-shrink: 0; margin-top: 1px; }
   .estimate-text { font-size: 12px; color: var(--warn-text); line-height: 1.65; }
   .estimate-text strong { font-weight: 600; }
-
+ 
   .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
   .metric {
     background: var(--white); border: 1px solid var(--border);
@@ -241,14 +242,14 @@
   .metric-label { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; font-weight: 500; }
   .metric-value { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
   .metric-value.accent { color: var(--green); }
-
+ 
   .sub-rates-card { margin-bottom: 16px; }
   .sub-rates-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .sub-rates-table th { text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 6px 12px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.04em; }
   .sub-rates-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
   .sub-rates-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
   .sub-rates-table tr:last-child td { border-bottom: none; }
-
+ 
   .table-card { }
   .table-scroll { overflow-x: auto; max-height: 340px; overflow-y: auto; border-radius: 0 0 var(--radius) var(--radius); }
   .detail-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
@@ -263,12 +264,12 @@
   .detail-table tr.estimated td { background: #FFCCCC; }
   .detail-table tfoot td { font-weight: 600; color: var(--text); background: var(--surface); border-top: 1px solid var(--border); border-bottom: none; }
   .detail-table tfoot td:first-child { color: var(--text-muted); }
-
+ 
   .download-row { display: flex; gap: 8px; margin-top: 14px; }
 </style>
 </head>
 <body>
-
+ 
 <div class="shell">
   <!-- Sidebar -->
   <aside class="sidebar">
@@ -279,7 +280,7 @@
         <div class="logo-sub">Financial Services</div>
       </div>
     </div>
-
+ 
     <div class="sidebar-section">
       <div class="sidebar-label">Rate type</div>
       <div class="rate-tabs">
@@ -291,25 +292,27 @@
         </button>
       </div>
     </div>
-
+ 
     <div class="api-section">
       <div class="api-label">FRED API key</div>
       <div class="api-input-row">
         <input type="password" class="api-input" id="fred-key" placeholder="Your API key" autocomplete="off">
-        <button class="api-btn" onclick="saveKey()">Save</button>
-        <button class="api-btn" onclick="testKey()">Test</button>
+        <div class="api-btn-row">
+          <button class="api-btn" onclick="saveKey()">Save</button>
+          <button class="api-btn" onclick="testKey()">Test</button>
+        </div>
       </div>
       <div class="api-status" id="api-status"></div>
     </div>
   </aside>
-
+ 
   <!-- Main -->
   <main class="main">
     <div class="page-header">
       <div class="page-title" id="page-title">SONIA — Compounded rate calculator</div>
       <div class="page-sub">Compounded in arrears · 5-day lookback · Bank of England via FRED</div>
     </div>
-
+ 
     <!-- Period & deal inputs -->
     <div class="card">
       <div class="card-title">Interest period</div>
@@ -330,7 +333,7 @@
         <div class="field"><label>CAS (decimal)</label><input type="number" id="cas" placeholder="0" step="0.0001" value="0"></div>
       </div>
     </div>
-
+ 
     <!-- Subperiods -->
     <div class="card">
       <div class="toggle-row">
@@ -346,7 +349,7 @@
         <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Date = end of subperiod. Parameters apply from that date onward.</div>
       </div>
     </div>
-
+ 
     <!-- Calculate -->
     <div class="btn-row">
       <button class="btn-calc" id="calc-btn" onclick="calculate()">
@@ -355,16 +358,16 @@
       <span class="calc-status" id="calc-status"></span>
     </div>
     <div class="error-box" id="error-box"></div>
-
+ 
     <!-- Results -->
     <div id="results" class="results" style="display:none"></div>
   </main>
 </div>
-
+ 
 <script>
 let currentRate = 'SONIA';
 let calcResult  = null;
-
+ 
 // ── Sidebar ────────────────────────────────────────────────────────────────────
 function switchRate(type, el) {
   currentRate = type;
@@ -377,7 +380,7 @@ function switchRate(type, el) {
   document.getElementById('results').style.display = 'none';
   calcResult = null;
 }
-
+ 
 // ── API key ────────────────────────────────────────────────────────────────────
 function saveKey() {
   const k = document.getElementById('fred-key').value.trim();
@@ -385,7 +388,7 @@ function saveKey() {
   localStorage.setItem('fred_key', k);
   setApiStatus('Key saved.', 'ok');
 }
-
+ 
 async function testKey() {
   const k = document.getElementById('fred-key').value.trim() || localStorage.getItem('fred_key');
   if (!k) { setApiStatus('No key entered.', 'err'); return; }
@@ -398,13 +401,13 @@ async function testKey() {
     setApiStatus('✗ Server unreachable', 'err');
   }
 }
-
+ 
 function setApiStatus(msg, cls) {
   const el = document.getElementById('api-status');
   el.textContent = msg;
   el.className = 'api-status ' + cls;
 }
-
+ 
 window.onload = function() {
   const saved = localStorage.getItem('fred_key');
   if (saved) { document.getElementById('fred-key').value = saved; setApiStatus('Key loaded from storage.', 'ok'); }
@@ -413,15 +416,15 @@ window.onload = function() {
   document.getElementById('end-date').value = fmt(today);
   document.getElementById('start-date').value = fmt(prior);
 };
-
+ 
 function fmt(d) { return d.toISOString().split('T')[0]; }
-
+ 
 // ── Subperiods ─────────────────────────────────────────────────────────────────
 function toggleSP() {
   document.getElementById('sp-section').style.display =
     document.getElementById('sp-toggle').checked ? 'block' : 'none';
 }
-
+ 
 function addSP() {
   const list = document.getElementById('sp-list');
   const div = document.createElement('div');
@@ -434,22 +437,22 @@ function addSP() {
     <button class="remove-btn" onclick="this.parentElement.remove()" title="Remove">✕</button>`;
   list.appendChild(div);
 }
-
+ 
 // ── Calculate ──────────────────────────────────────────────────────────────────
 async function calculate() {
   const key = document.getElementById('fred-key').value.trim() || localStorage.getItem('fred_key');
   if (!key) { showError('Please enter your FRED API key in the sidebar.'); return; }
-
+ 
   const start     = document.getElementById('start-date').value;
   const end       = document.getElementById('end-date').value;
   const base      = parseInt(document.getElementById('base').value);
   const principal = parseFloat(document.getElementById('principal').value);
   const margin    = parseFloat(document.getElementById('margin').value) || 0;
   const cas       = parseFloat(document.getElementById('cas').value) || 0;
-
+ 
   if (!start || !end || !principal) { showError('Please fill in start date, end date and principal.'); return; }
   if (end <= start) { showError('End date must be after start date.'); return; }
-
+ 
   const useSP = document.getElementById('sp-toggle').checked;
   const subperiods = [];
   if (useSP) {
@@ -464,14 +467,14 @@ async function calculate() {
       });
     });
   }
-
+ 
   const btn = document.getElementById('calc-btn');
   document.getElementById('calc-label').innerHTML = '<span class="spinner"></span>';
   btn.disabled = true;
   document.getElementById('calc-status').textContent = 'Fetching rates from FRED…';
   document.getElementById('error-box').style.display = 'none';
   document.getElementById('results').style.display = 'none';
-
+ 
   try {
     const resp = await fetch('/api/calculate', {
       method: 'POST',
@@ -490,12 +493,12 @@ async function calculate() {
     btn.disabled = false;
   }
 }
-
+ 
 // ── Render ─────────────────────────────────────────────────────────────────────
 function renderResults(d) {
   const res = document.getElementById('results');
   let html = '';
-
+ 
   // Estimate banner
   if (d.has_estimate) {
     html += `<div class="estimate-banner">
@@ -507,7 +510,7 @@ function renderResults(d) {
       </div>
     </div>`;
   }
-
+ 
   // Metrics
   const rateDisplay = (d.main_rate * 100).toFixed(d.decimals) + '%';
   const interestFmt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(d.total_interest);
@@ -517,7 +520,7 @@ function renderResults(d) {
     <div class="metric"><div class="metric-label">Period days</div><div class="metric-value">${d.total_days}</div></div>
     <div class="metric"><div class="metric-label">Observation rows</div><div class="metric-value">${d.rows.length}</div></div>
   </div>`;
-
+ 
   // Subperiod rates
   if (d.sub_rates && Object.keys(d.sub_rates).length) {
     html += `<div class="card sub-rates-card"><div class="card-title">Subperiod rates</div>
@@ -527,7 +530,7 @@ function renderResults(d) {
     });
     html += `</tbody></table></div>`;
   }
-
+ 
   // Detail table
   html += `<div class="card table-card"><div class="card-title">Daily calculation detail
     ${d.has_estimate ? '<span style="margin-left:10px;font-size:10px;background:#FFCCCC;padding:2px 8px;border-radius:4px;color:#7a1a1a;font-weight:600">Highlighted rows = estimated</span>' : ''}
@@ -547,7 +550,7 @@ function renderResults(d) {
       <th>Total int</th>
     </tr></thead>
     <tbody>`;
-
+ 
   let totRFR = 0, totCAS = 0, totMgn = 0, totTot = 0;
   d.rows.forEach(r => {
     const cls = r.estimated ? ' class="estimated"' : '';
@@ -567,13 +570,13 @@ function renderResults(d) {
       <td>${r.total_interest.toFixed(2)}</td>
     </tr>`;
   });
-
+ 
   const n2 = v => v.toFixed(2);
   html += `</tbody><tfoot><tr>
     <td>Total</td><td></td><td>${d.total_days}</td><td></td><td></td><td></td><td></td>
     <td>${n2(totRFR)}</td><td>${n2(totCAS)}</td><td>${n2(totMgn)}</td><td>${n2(totTot)}</td>
   </tr></tfoot></table></div></div>`;
-
+ 
   // Download
   html += `<div class="download-row">
     <button class="btn-secondary" onclick="downloadExcel()">
@@ -581,16 +584,16 @@ function renderResults(d) {
       Download Excel
     </button>
   </div>`;
-
+ 
   res.innerHTML = html;
   res.style.display = 'block';
 }
-
+ 
 // ── Excel export ───────────────────────────────────────────────────────────────
 function downloadExcel() {
   if (!calcResult) return;
   const { rows, decimals, has_estimate } = calcResult;
-
+ 
   const headers = [
     'RFR Banking Day (i)',
     'Daily Rate (i-LP) %',
@@ -611,17 +614,17 @@ function downloadExcel() {
     'Total Interest',
     'Estimated',
   ];
-
+ 
   const data = [headers, ...rows.map(r => [
     r.date, r.rate, r.start_date, r.end_date, r.diff_days, r.cum_days,
     r.comp_factor, r.ann_cum_comp, r.non_cum_comp, r.margin, r.cas, r.principal,
     r.rfr_interest, r.cas_interest, r.margin_interest, r.total_interest,
     r.estimated ? 'YES' : ''
   ])];
-
+ 
   const ws = XLSX.utils.aoa_to_sheet(data);
   ws['!cols'] = headers.map((h, i) => ({ wch: Math.max(h.length + 2, 20) }));
-
+ 
   // Highlight estimated rows
   if (has_estimate) {
     rows.forEach((r, i) => {
@@ -633,13 +636,13 @@ function downloadExcel() {
       }
     });
   }
-
+ 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, `${currentRate} calculations`);
   const today = new Date().toISOString().split('T')[0];
   XLSX.writeFile(wb, `${currentRate} calculations ${today}.xlsx`, { cellStyles: true });
 }
-
+ 
 function showError(msg) {
   const box = document.getElementById('error-box');
   box.textContent = msg;
