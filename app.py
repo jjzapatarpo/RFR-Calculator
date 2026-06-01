@@ -126,28 +126,24 @@ def index():
 
 @app.route("/api/calculate", methods=["POST"])
 def calculate():
-    body = request.json
-    api_key   = body.get("api_key", "").strip()
-    rate_type = body.get("rate_type", "SONIA")
-    start     = body.get("start")
-    end       = body.get("end")
-    base      = int(body.get("base", 365))
-    margin    = float(body.get("margin", 0))
-    cas       = float(body.get("cas", 0))
-    principal = float(body.get("principal", 0))
-    subperiods = body.get("subperiods", [])  # [{date, margin, principal, cas}]
-    decimals  = 6 if rate_type == "SONIA" else 7
-
-    if not api_key:
-        return jsonify({"error": "No FRED API key provided."}), 400
-
     try:
+        body = request.json
+        api_key   = body.get("api_key", "").strip()
+        rate_type = body.get("rate_type", "SONIA")
+        start     = body.get("start")
+        end       = body.get("end")
+        base      = int(body.get("base", 365))
+        margin    = float(body.get("margin", 0))
+        cas       = float(body.get("cas", 0))
+        principal = float(body.get("principal", 0))
+        subperiods = body.get("subperiods", [])
+        decimals  = 6 if rate_type == "SONIA" else 7
+
+        if not api_key:
+            return jsonify({"error": "No FRED API key provided."}), 400
+
         series_id = "IUDSOIA" if rate_type == "SONIA" else "SOFR"
         raw = fetch_fred(series_id, api_key)
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 400
-    except Exception as e:
-        return jsonify({"error": f"FRED fetch failed: {str(e)}"}), 500
 
     # Load holidays server-side
     holidays = get_uk_holidays() if rate_type == "SONIA" else get_us_holidays()
@@ -290,6 +286,10 @@ def calculate():
         "decimals": decimals,
         "rows": rows,
     })
+
+    except Exception as e:
+        import traceback
+        return jsonify({"error": str(e), "detail": traceback.format_exc()}), 500
 
 @app.route("/api/test-key", methods=["POST"])
 def test_key():
