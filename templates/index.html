@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RFR Calculator — Altrium Financial Services</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --green:       #002917;
+    --green-mid:   #004d28;
+    --green-light: #e8f5ee;
+    --slate:       #38405F;
+    --cyan:        #07A0C3;
+    --mint:        #F7FFF7;
+    --gray:        #CDD6E0;
+    --text:        #1a1a1a;
+    --text-muted:  #6b7280;
+    --border:      #e5e7eb;
+    --surface:     #f9fafb;
+    --white:       #ffffff;
+    --danger:      #dc2626;
+    --danger-bg:   #fef2f2;
+    --warn-bg:     #fffbeb;
+    --warn-border: #f59e0b;
+    --warn-text:   #92400e;
+    --radius:      8px;
+    --radius-lg:   12px;
+  }
+
+  body {
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    color: var(--text);
+    background: #f3f4f6;
+    min-height: 100vh;
+  }
+
+  /* ── Layout ── */
+  .shell { display: flex; min-height: 100vh; }
+
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    background: var(--green);
+    padding: 28px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+  }
+
+  .logo { display: flex; align-items: center; gap: 10px; }
+  .logo-mark {
+    width: 36px; height: 36px;
+    background: var(--mint);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; font-weight: 600; color: var(--green);
+    flex-shrink: 0;
+  }
+  .logo-text { line-height: 1.2; }
+  .logo-name { font-size: 15px; font-weight: 600; color: var(--mint); letter-spacing: -0.2px; }
+  .logo-sub  { font-size: 10px; color: rgba(247,255,247,0.55); letter-spacing: 0.04em; text-transform: uppercase; }
+
+  .sidebar-section { }
+  .sidebar-label {
+    font-size: 10px; font-weight: 600; color: rgba(247,255,247,0.4);
+    text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px;
+  }
+
+  .rate-tabs { display: flex; flex-direction: column; gap: 4px; }
+  .rate-tab {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 12px; border-radius: var(--radius);
+    cursor: pointer; border: none; background: transparent;
+    color: rgba(247,255,247,0.6); font-family: 'Manrope', sans-serif;
+    font-size: 13px; font-weight: 500; text-align: left; transition: all 0.15s;
+  }
+  .rate-tab:hover { background: rgba(247,255,247,0.08); color: var(--mint); }
+  .rate-tab.active { background: rgba(247,255,247,0.14); color: var(--mint); }
+  .rate-tab .tab-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: rgba(247,255,247,0.3); flex-shrink: 0;
+  }
+  .rate-tab.active .tab-dot { background: var(--cyan); }
+
+  .api-section { margin-top: auto; padding-top: 24px; border-top: 1px solid rgba(247,255,247,0.1); }
+  .api-label { font-size: 10px; font-weight: 600; color: rgba(247,255,247,0.4); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+  .api-input-row { display: flex; gap: 6px; }
+  .api-input {
+    flex: 1; height: 32px; padding: 0 10px; border-radius: var(--radius);
+    border: 1px solid rgba(247,255,247,0.15); background: rgba(247,255,247,0.07);
+    color: var(--mint); font-family: 'Manrope', sans-serif; font-size: 12px;
+  }
+  .api-input::placeholder { color: rgba(247,255,247,0.3); }
+  .api-input:focus { outline: none; border-color: var(--cyan); }
+  .api-btn {
+    height: 32px; padding: 0 10px; border-radius: var(--radius);
+    border: 1px solid rgba(247,255,247,0.2); background: rgba(247,255,247,0.1);
+    color: var(--mint); font-family: 'Manrope', sans-serif; font-size: 11px;
+    cursor: pointer; white-space: nowrap; transition: background 0.15s;
+  }
+  .api-btn:hover { background: rgba(247,255,247,0.18); }
+  .api-status { margin-top: 6px; font-size: 11px; min-height: 16px; }
+  .api-status.ok  { color: #6ee7b7; }
+  .api-status.err { color: #fca5a5; }
+
+  /* ── Main ── */
+  .main { flex: 1; padding: 32px; overflow-y: auto; }
+
+  .page-header { margin-bottom: 28px; }
+  .page-title { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+  .page-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 16px;
+  }
+  .card-title {
+    font-size: 11px; font-weight: 600; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 16px;
+  }
+
+  /* ── Form ── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 12px; font-weight: 500; color: var(--text-muted); }
+  .field input, .field select {
+    height: 36px; padding: 0 11px;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-family: 'Manrope', sans-serif; font-size: 13px; color: var(--text);
+    background: var(--white); transition: border-color 0.15s;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--cyan); box-shadow: 0 0 0 3px rgba(7,160,195,0.1); }
+
+  /* ── Toggle ── */
+  .toggle-row { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .toggle { position: relative; display: inline-block; width: 38px; height: 22px; }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0; background: var(--border);
+    border-radius: 22px; transition: 0.2s; cursor: pointer;
+  }
+  .toggle-slider:before {
+    content: ''; position: absolute; height: 16px; width: 16px;
+    left: 3px; bottom: 3px; background: white; border-radius: 50%; transition: 0.2s;
+  }
+  input:checked + .toggle-slider { background: var(--green); }
+  input:checked + .toggle-slider:before { transform: translateX(16px); }
+  .toggle-label { font-size: 13px; color: var(--text); font-weight: 500; }
+
+  /* ── Subperiods ── */
+  .subperiod-row {
+    display: grid; grid-template-columns: 160px 1fr 1fr 1fr 32px;
+    gap: 10px; align-items: end; margin-bottom: 10px;
+    padding: 12px 14px; background: var(--surface); border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  .subperiod-row .field label { font-size: 11px; }
+  .remove-btn {
+    height: 36px; width: 32px; border: 1px solid var(--border);
+    border-radius: var(--radius); background: white; color: var(--text-muted);
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 16px; transition: all 0.15s;
+  }
+  .remove-btn:hover { background: var(--danger-bg); color: var(--danger); border-color: #fca5a5; }
+
+  .add-sp-btn {
+    display: inline-flex; align-items: center; gap: 6px;
+    height: 32px; padding: 0 12px; border-radius: var(--radius);
+    border: 1px dashed var(--border); background: transparent;
+    color: var(--text-muted); font-family: 'Manrope', sans-serif; font-size: 12px;
+    cursor: pointer; transition: all 0.15s; margin-top: 4px;
+  }
+  .add-sp-btn:hover { border-color: var(--cyan); color: var(--cyan); }
+
+  /* ── Buttons ── */
+  .btn-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+  .btn-calc {
+    height: 40px; padding: 0 24px; border-radius: var(--radius);
+    background: var(--green); color: var(--mint); border: none;
+    font-family: 'Manrope', sans-serif; font-size: 14px; font-weight: 600;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+    transition: background 0.15s;
+  }
+  .btn-calc:hover { background: var(--green-mid); }
+  .btn-calc:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .btn-secondary {
+    height: 36px; padding: 0 16px; border-radius: var(--radius);
+    background: white; color: var(--text); border: 1px solid var(--border);
+    font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 500;
+    cursor: pointer; display: inline-flex; align-items: center; gap: 7px;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { background: var(--surface); border-color: #d1d5db; }
+
+  .calc-status { font-size: 12px; color: var(--text-muted); }
+
+  /* ── Spinner ── */
+  .spinner {
+    display: inline-block; width: 15px; height: 15px;
+    border: 2px solid rgba(247,255,247,0.3); border-top-color: var(--mint);
+    border-radius: 50%; animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Error ── */
+  .error-box {
+    background: var(--danger-bg); border: 1px solid #fca5a5;
+    border-radius: var(--radius); padding: 12px 16px;
+    font-size: 13px; color: var(--danger); margin-top: 12px;
+    display: none;
+  }
+
+  /* ── Results ── */
+  .results { margin-top: 20px; }
+
+  .estimate-banner {
+    background: var(--warn-bg); border: 1px solid var(--warn-border);
+    border-radius: var(--radius); padding: 12px 16px; margin-bottom: 16px;
+    display: flex; gap: 10px;
+  }
+  .estimate-icon { font-size: 18px; color: var(--warn-border); flex-shrink: 0; margin-top: 1px; }
+  .estimate-text { font-size: 12px; color: var(--warn-text); line-height: 1.65; }
+  .estimate-text strong { font-weight: 600; }
+
+  .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .metric {
+    background: var(--white); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 14px 16px;
+  }
+  .metric-label { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; font-weight: 500; }
+  .metric-value { font-size: 22px; font-weight: 600; color: var(--text); letter-spacing: -0.5px; font-variant-numeric: tabular-nums; }
+  .metric-value.accent { color: var(--green); }
+
+  .sub-rates-card { margin-bottom: 16px; }
+  .sub-rates-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .sub-rates-table th { text-align: left; font-size: 11px; font-weight: 600; color: var(--text-muted); padding: 6px 12px; border-bottom: 1px solid var(--border); text-transform: uppercase; letter-spacing: 0.04em; }
+  .sub-rates-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+  .sub-rates-table td:last-child { text-align: right; font-variant-numeric: tabular-nums; font-weight: 500; }
+  .sub-rates-table tr:last-child td { border-bottom: none; }
+
+  .table-card { }
+  .table-scroll { overflow-x: auto; max-height: 340px; overflow-y: auto; border-radius: 0 0 var(--radius) var(--radius); }
+  .detail-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px; }
+  .detail-table th {
+    text-align: right; font-size: 10px; font-weight: 600; color: var(--text-muted);
+    padding: 8px 10px; background: var(--surface); border-bottom: 1px solid var(--border);
+    position: sticky; top: 0; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap;
+  }
+  .detail-table th:first-child { text-align: left; }
+  .detail-table td { padding: 6px 10px; border-bottom: 1px solid #f3f4f6; text-align: right; font-variant-numeric: tabular-nums; color: var(--text); }
+  .detail-table td:first-child { text-align: left; color: var(--text-muted); }
+  .detail-table tr.estimated td { background: #FFCCCC; }
+  .detail-table tfoot td { font-weight: 600; color: var(--text); background: var(--surface); border-top: 1px solid var(--border); border-bottom: none; }
+  .detail-table tfoot td:first-child { color: var(--text-muted); }
+
+  .download-row { display: flex; gap: 8px; margin-top: 14px; }
+</style>
+</head>
+<body>
+
+<div class="shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">A</div>
+      <div class="logo-text">
+        <div class="logo-name">Altrium</div>
+        <div class="logo-sub">Financial Services</div>
+      </div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="sidebar-label">Rate type</div>
+      <div class="rate-tabs">
+        <button class="rate-tab active" onclick="switchRate('SONIA', this)">
+          <span class="tab-dot"></span> SONIA
+        </button>
+        <button class="rate-tab" onclick="switchRate('SOFR', this)">
+          <span class="tab-dot"></span> SOFR
+        </button>
+      </div>
+    </div>
+
+    <div class="api-section">
+      <div class="api-label">FRED API key</div>
+      <div class="api-input-row">
+        <input type="password" class="api-input" id="fred-key" placeholder="Your API key" autocomplete="off">
+        <button class="api-btn" onclick="saveKey()">Save</button>
+        <button class="api-btn" onclick="testKey()">Test</button>
+      </div>
+      <div class="api-status" id="api-status"></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title" id="page-title">SONIA — Compounded rate calculator</div>
+      <div class="page-sub">Compounded in arrears · 5-day lookback · Bank of England via FRED</div>
+    </div>
+
+    <!-- Period & deal inputs -->
+    <div class="card">
+      <div class="card-title">Interest period</div>
+      <div class="grid3" style="margin-bottom:14px">
+        <div class="field"><label>Start date</label><input type="date" id="start-date"></div>
+        <div class="field"><label>End date</label><input type="date" id="end-date"></div>
+        <div class="field"><label>Day count base</label>
+          <select id="base">
+            <option value="365">ACT/365</option>
+            <option value="360">ACT/360</option>
+          </select>
+        </div>
+      </div>
+      <div class="card-title" style="margin-top:4px">Deal parameters</div>
+      <div class="grid3">
+        <div class="field"><label>Principal</label><input type="number" id="principal" placeholder="e.g. 10000000" step="1"></div>
+        <div class="field"><label>Margin (decimal)</label><input type="number" id="margin" placeholder="e.g. 0.07" step="0.0001"></div>
+        <div class="field"><label>CAS (decimal)</label><input type="number" id="cas" placeholder="0" step="0.0001" value="0"></div>
+      </div>
+    </div>
+
+    <!-- Subperiods -->
+    <div class="card">
+      <div class="toggle-row">
+        <label class="toggle"><input type="checkbox" id="sp-toggle" onchange="toggleSP()"><span class="toggle-slider"></span></label>
+        <span class="toggle-label">Subperiods</span>
+      </div>
+      <div id="sp-section" style="display:none">
+        <div id="sp-list"></div>
+        <button class="add-sp-btn" onclick="addSP()">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M6.5 1v11M1 6.5h11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Add subperiod
+        </button>
+        <div style="font-size:11px;color:var(--text-muted);margin-top:8px">Date = end of subperiod. Parameters apply from that date onward.</div>
+      </div>
+    </div>
+
+    <!-- Calculate -->
+    <div class="btn-row">
+      <button class="btn-calc" id="calc-btn" onclick="calculate()">
+        <span id="calc-label">Calculate</span>
+      </button>
+      <span class="calc-status" id="calc-status"></span>
+    </div>
+    <div class="error-box" id="error-box"></div>
+
+    <!-- Results -->
+    <div id="results" class="results" style="display:none"></div>
+  </main>
+</div>
+
+<script>
+let currentRate = 'SONIA';
+let calcResult  = null;
+
+// ── Sidebar ────────────────────────────────────────────────────────────────────
+function switchRate(type, el) {
+  currentRate = type;
+  document.querySelectorAll('.rate-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const sources = { SONIA: 'Bank of England via FRED', SOFR: 'NY Fed via FRED' };
+  document.getElementById('page-title').textContent = `${type} — Compounded rate calculator`;
+  document.querySelector('.page-sub').textContent = `Compounded in arrears · 5-day lookback · ${sources[type]}`;
+  document.getElementById('base').value = type === 'SONIA' ? '365' : '360';
+  document.getElementById('results').style.display = 'none';
+  calcResult = null;
+}
+
+// ── API key ────────────────────────────────────────────────────────────────────
+function saveKey() {
+  const k = document.getElementById('fred-key').value.trim();
+  if (!k) return;
+  localStorage.setItem('fred_key', k);
+  setApiStatus('Key saved.', 'ok');
+}
+
+async function testKey() {
+  const k = document.getElementById('fred-key').value.trim() || localStorage.getItem('fred_key');
+  if (!k) { setApiStatus('No key entered.', 'err'); return; }
+  setApiStatus('Testing…', '');
+  try {
+    const r = await fetch('/api/test-key', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({api_key:k}) });
+    const d = await r.json();
+    setApiStatus(d.ok ? '✓ Connected to FRED' : '✗ ' + d.message, d.ok ? 'ok' : 'err');
+  } catch(e) {
+    setApiStatus('✗ Server unreachable', 'err');
+  }
+}
+
+function setApiStatus(msg, cls) {
+  const el = document.getElementById('api-status');
+  el.textContent = msg;
+  el.className = 'api-status ' + cls;
+}
+
+window.onload = function() {
+  const saved = localStorage.getItem('fred_key');
+  if (saved) { document.getElementById('fred-key').value = saved; setApiStatus('Key loaded from storage.', 'ok'); }
+  const today = new Date(), prior = new Date(today);
+  prior.setDate(prior.getDate() - 30);
+  document.getElementById('end-date').value = fmt(today);
+  document.getElementById('start-date').value = fmt(prior);
+};
+
+function fmt(d) { return d.toISOString().split('T')[0]; }
+
+// ── Subperiods ─────────────────────────────────────────────────────────────────
+function toggleSP() {
+  document.getElementById('sp-section').style.display =
+    document.getElementById('sp-toggle').checked ? 'block' : 'none';
+}
+
+function addSP() {
+  const list = document.getElementById('sp-list');
+  const div = document.createElement('div');
+  div.className = 'subperiod-row';
+  div.innerHTML = `
+    <div class="field"><label>End date</label><input type="date" class="sp-date"></div>
+    <div class="field"><label>Principal</label><input type="number" class="sp-principal" placeholder="e.g. 10000000" step="1"></div>
+    <div class="field"><label>Margin</label><input type="number" class="sp-margin" placeholder="0.07" step="0.0001"></div>
+    <div class="field"><label>CAS</label><input type="number" class="sp-cas" placeholder="0" step="0.0001" value="0"></div>
+    <button class="remove-btn" onclick="this.parentElement.remove()" title="Remove">✕</button>`;
+  list.appendChild(div);
+}
+
+// ── Calculate ──────────────────────────────────────────────────────────────────
+async function calculate() {
+  const key = document.getElementById('fred-key').value.trim() || localStorage.getItem('fred_key');
+  if (!key) { showError('Please enter your FRED API key in the sidebar.'); return; }
+
+  const start     = document.getElementById('start-date').value;
+  const end       = document.getElementById('end-date').value;
+  const base      = parseInt(document.getElementById('base').value);
+  const principal = parseFloat(document.getElementById('principal').value);
+  const margin    = parseFloat(document.getElementById('margin').value) || 0;
+  const cas       = parseFloat(document.getElementById('cas').value) || 0;
+
+  if (!start || !end || !principal) { showError('Please fill in start date, end date and principal.'); return; }
+  if (end <= start) { showError('End date must be after start date.'); return; }
+
+  const useSP = document.getElementById('sp-toggle').checked;
+  const subperiods = [];
+  if (useSP) {
+    document.querySelectorAll('#sp-list .subperiod-row').forEach(row => {
+      const d = row.querySelector('.sp-date').value;
+      if (!d) return;
+      subperiods.push({
+        date:      d,
+        principal: parseFloat(row.querySelector('.sp-principal').value) || principal,
+        margin:    parseFloat(row.querySelector('.sp-margin').value)    || margin,
+        cas:       parseFloat(row.querySelector('.sp-cas').value)       || 0,
+      });
+    });
+  }
+
+  const btn = document.getElementById('calc-btn');
+  document.getElementById('calc-label').innerHTML = '<span class="spinner"></span>';
+  btn.disabled = true;
+  document.getElementById('calc-status').textContent = 'Fetching rates from FRED…';
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('results').style.display = 'none';
+
+  try {
+    const resp = await fetch('/api/calculate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ api_key:key, rate_type:currentRate, start, end, base, margin, cas, principal, subperiods }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) { showError(data.error || 'Calculation failed.'); return; }
+    calcResult = data;
+    renderResults(data);
+    document.getElementById('calc-status').textContent = '';
+  } catch(e) {
+    showError('Could not reach the server. Is app.py running?');
+  } finally {
+    document.getElementById('calc-label').textContent = 'Calculate';
+    btn.disabled = false;
+  }
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────────
+function renderResults(d) {
+  const res = document.getElementById('results');
+  let html = '';
+
+  // Estimate banner
+  if (d.has_estimate) {
+    html += `<div class="estimate-banner">
+      <div class="estimate-icon">⚠</div>
+      <div class="estimate-text">
+        <strong>Estimated result.</strong> The ${currentRate} series on FRED is not yet available beyond <strong>${d.last_available}</strong>.
+        Rows from <strong>${d.first_est_date}</strong> onward are forward-filled using the last published rate and are highlighted in the table below.
+        ${d.final_rate_date ? `The final compounded rate will be calculable on or after <strong>${d.final_rate_date}</strong>.` : ''}
+      </div>
+    </div>`;
+  }
+
+  // Metrics
+  const rateDisplay = (d.main_rate * 100).toFixed(d.decimals) + '%';
+  const interestFmt = new Intl.NumberFormat('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(d.total_interest);
+  html += `<div class="metrics-grid">
+    <div class="metric"><div class="metric-label">Compounded ${currentRate}</div><div class="metric-value accent">${rateDisplay}</div></div>
+    <div class="metric"><div class="metric-label">Total interest</div><div class="metric-value">${interestFmt}</div></div>
+    <div class="metric"><div class="metric-label">Period days</div><div class="metric-value">${d.total_days}</div></div>
+    <div class="metric"><div class="metric-label">Observation rows</div><div class="metric-value">${d.rows.length}</div></div>
+  </div>`;
+
+  // Subperiod rates
+  if (d.sub_rates && Object.keys(d.sub_rates).length) {
+    html += `<div class="card sub-rates-card"><div class="card-title">Subperiod rates</div>
+    <table class="sub-rates-table"><thead><tr><th>Date</th><th style="text-align:right">Compounded rate</th></tr></thead><tbody>`;
+    Object.entries(d.sub_rates).forEach(([k, v]) => {
+      html += `<tr><td>${k}</td><td>${(v * 100).toFixed(d.decimals)}%</td></tr>`;
+    });
+    html += `</tbody></table></div>`;
+  }
+
+  // Detail table
+  html += `<div class="card table-card"><div class="card-title">Daily calculation detail
+    ${d.has_estimate ? '<span style="margin-left:10px;font-size:10px;background:#FFCCCC;padding:2px 8px;border-radius:4px;color:#7a1a1a;font-weight:600">Highlighted rows = estimated</span>' : ''}
+  </div>
+  <div class="table-scroll"><table class="detail-table">
+    <thead><tr>
+      <th style="text-align:left">Date</th>
+      <th>Rate&nbsp;(%)</th>
+      <th>Days</th>
+      <th>Cum days</th>
+      <th>Comp factor</th>
+      <th>Ann cum (%)</th>
+      <th>Non-cum (%)</th>
+      <th>RFR int</th>
+      <th>CAS int</th>
+      <th>Margin int</th>
+      <th>Total int</th>
+    </tr></thead>
+    <tbody>`;
+
+  let totRFR = 0, totCAS = 0, totMgn = 0, totTot = 0;
+  d.rows.forEach(r => {
+    const cls = r.estimated ? ' class="estimated"' : '';
+    totRFR += r.rfr_interest; totCAS += r.cas_interest;
+    totMgn += r.margin_interest; totTot += r.total_interest;
+    html += `<tr${cls}>
+      <td>${r.date}</td>
+      <td>${r.rate.toFixed(4)}</td>
+      <td>${r.diff_days}</td>
+      <td>${r.cum_days}</td>
+      <td>${r.comp_factor.toFixed(8)}</td>
+      <td>${(r.ann_cum_comp * 100).toFixed(d.decimals)}</td>
+      <td>${(r.non_cum_comp * 100).toFixed(d.decimals)}</td>
+      <td>${r.rfr_interest.toFixed(2)}</td>
+      <td>${r.cas_interest.toFixed(2)}</td>
+      <td>${r.margin_interest.toFixed(2)}</td>
+      <td>${r.total_interest.toFixed(2)}</td>
+    </tr>`;
+  });
+
+  const n2 = v => v.toFixed(2);
+  html += `</tbody><tfoot><tr>
+    <td>Total</td><td></td><td>${d.total_days}</td><td></td><td></td><td></td><td></td>
+    <td>${n2(totRFR)}</td><td>${n2(totCAS)}</td><td>${n2(totMgn)}</td><td>${n2(totTot)}</td>
+  </tr></tfoot></table></div></div>`;
+
+  // Download
+  html += `<div class="download-row">
+    <button class="btn-secondary" onclick="downloadExcel()">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 10v1a1 1 0 001 1h8a1 1 0 001-1v-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Download Excel
+    </button>
+  </div>`;
+
+  res.innerHTML = html;
+  res.style.display = 'block';
+}
+
+// ── Excel export ───────────────────────────────────────────────────────────────
+function downloadExcel() {
+  if (!calcResult) return;
+  const { rows, decimals, has_estimate } = calcResult;
+
+  const headers = [
+    'RFR Banking Day (i)',
+    'Daily Rate (i-LP) %',
+    'Start Date (i)',
+    'End Date (i)',
+    'ni (Calendar days)',
+    'tni (Cumulative calendar days)',
+    'Compounding Factor',
+    'ACCDR — Annualised Cumulative Compounded Daily Rate',
+    'UCCDRi — Unannualised Cumulative Compounded Daily Rate',
+    'Daily Non-Cumulative Compounded RFR Rate',
+    'Margin',
+    'Credit Adjustment Spread (CAS)',
+    'Principal',
+    'RFR Interest',
+    'CAS Interest',
+    'Margin Interest',
+    'Total Interest',
+    'Estimated',
+  ];
+
+  const data = [headers, ...rows.map(r => [
+    r.date, r.rate, r.start_date, r.end_date, r.diff_days, r.cum_days,
+    r.comp_factor, r.ann_cum_comp, r.non_cum_comp, r.margin, r.cas, r.principal,
+    r.rfr_interest, r.cas_interest, r.margin_interest, r.total_interest,
+    r.estimated ? 'YES' : ''
+  ])];
+
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  ws['!cols'] = headers.map((h, i) => ({ wch: Math.max(h.length + 2, 20) }));
+
+  // Highlight estimated rows
+  if (has_estimate) {
+    rows.forEach((r, i) => {
+      if (!r.estimated) return;
+      for (let c = 0; c < headers.length; c++) {
+        const addr = XLSX.utils.encode_cell({ r: i + 1, c });
+        if (!ws[addr]) ws[addr] = { v: '', t: 's' };
+        ws[addr].s = { fill: { patternType: 'solid', fgColor: { rgb: 'FFCCCC' } } };
+      }
+    });
+  }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, `${currentRate} calculations`);
+  const today = new Date().toISOString().split('T')[0];
+  XLSX.writeFile(wb, `${currentRate} calculations ${today}.xlsx`, { cellStyles: true });
+}
+
+function showError(msg) {
+  const box = document.getElementById('error-box');
+  box.textContent = msg;
+  box.style.display = 'block';
+}
+</script>
+</body>
+</html>
