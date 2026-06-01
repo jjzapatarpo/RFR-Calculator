@@ -487,7 +487,7 @@ async function calculate() {
     renderResults(data);
     document.getElementById('calc-status').textContent = '';
   } catch(e) {
-    showError('Could not reach the server. Is app.py running?');
+    showError('Request failed: ' + (e.message || e));
   } finally {
     document.getElementById('calc-label').textContent = 'Calculate';
     btn.disabled = false;
